@@ -1,16 +1,16 @@
-import boto3
+from boto3.session import Session
 from mypy_boto3_ec2 import EC2Client
 from mypy_boto3_ec2.type_defs import VolumeTypeDef
-from resources.base import LIST_FUNC
+from resources.base import LIST_FUNC, ResourceBase
 
-class EC2Volume:
-    def __init__(self, sess: EC2Client, volume: VolumeTypeDef):
-        self.sess: EC2Client = sess
+class EC2Volume(ResourceBase):
+    def __init__(self, svc: EC2Client, volume: VolumeTypeDef):
+        self.svc: EC2Client = svc
         self.volume = volume
 
     def delete(self):
         try:
-            self.sess.delete_volume(VolumeId=self.volume['VolumeId'])
+            self.svc.delete_volume(VolumeId=self.volume['VolumeId'])
         except Exception as e:
             return e
         return None
@@ -18,13 +18,10 @@ class EC2Volume:
     def __str__(self):
         return self.volume['VolumeId']
 
-def list_ec2_volumes(region: str = "ap-northeast-2"):
-    sess = boto3.client(
-        "ec2",
-        region_name = region
-    )
+def list_ec2_volumes(sess: Session):
+    svc = sess.client("ec2")
 
-    interator = sess.get_paginator("describe_volumes").paginate(
+    interator = svc.get_paginator("describe_volumes").paginate(
         Filters=[
             {
                 'Name': 'status',
@@ -35,7 +32,10 @@ def list_ec2_volumes(region: str = "ap-northeast-2"):
         ],
     )
 
-    return (EC2Volume(sess, volume) for volumes in interator for volume in volumes["Volumes"])
+    return (EC2Volume(svc, volume) 
+            for volumes in interator 
+            for volume in volumes["Volumes"]
+            )
 
 if __name__ != "__main__":
     LIST_FUNC.append(list_ec2_volumes)
