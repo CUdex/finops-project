@@ -1,7 +1,7 @@
 from boto3.session import Session
 from mypy_boto3_ec2 import EC2Client
 from mypy_boto3_ec2.type_defs import VolumeTypeDef
-from resources.base import LIST_FUNC, ResourceBase
+from resources.base import LIST_FUNC, ResourceBase, TagResultType
 
 class EC2Volume(ResourceBase):
     def __init__(self, svc: EC2Client, volume: VolumeTypeDef):
@@ -17,6 +17,10 @@ class EC2Volume(ResourceBase):
 
     def __str__(self):
         return self.volume['VolumeId']
+    
+    @property
+    def tags(self) -> TagResultType:
+        return self.volume.get('Tags', [])
 
 def list_ec2_volumes(sess: Session):
     svc = sess.client("ec2")

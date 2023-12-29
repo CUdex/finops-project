@@ -1,6 +1,8 @@
 from items.state import State
-from resources.base import ResourceBase
+from resources.base import ResourceBase, TagResultType
 from typing import TypedDict
+from boto3.session import Session
+from resources.utils import convert_dict_to_tags
 
 class ItemDict(TypedDict):
     state: State
@@ -14,7 +16,7 @@ class Item:
     def __init__(self, resource: ResourceBase, region: str, name: str):
         self.__item = {
             "state": State.NEW,
-            "reason": None,
+            "reason": Exception | None,
             "region": region,
             "resource": resource,
             "type": name
@@ -41,3 +43,7 @@ class Item:
     @reason.setter
     def reason(self, value):
         self.__item['reason'] = value
+
+    @property
+    def tags(self) -> TagResultType:
+        return convert_dict_to_tags(self.__item['resource'].tags)
